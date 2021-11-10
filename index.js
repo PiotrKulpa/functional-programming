@@ -205,28 +205,68 @@ const count = (arr) => arr.length;
 const countWords = R.compose(count, explode);
 console.log("Composition:", countWords(str));
 
-const trim = (str) => str.replace(/^\s*|\s*$/g, '');
-const normalize = (str) => str.replace(/\-/g, '');
+const trim = (str) => str.replace(/^\s*|\s*$/g, "");
+const normalize = (str) => str.replace(/\-/g, "");
 const validLength = (param, str) => str.length === param;
 const checkLengthSsn = _.partial(validLength, 9);
 const cleanInput = R.compose(normalize, trim);
 const isValidSsn = R.compose(checkLengthSsn, cleanInput);
-console.log(cleanInput(' 444-44-4444 ')); //-> '444444444'
-console.log(isValidSsn(' 444-44-4444 ')); //-> true
+console.log(cleanInput(" 444-44-4444 ")); //-> '444444444'
+console.log(isValidSsn(" 444-44-4444 ")); //-> true
 
-// Functor (Array is a functor) - is a structure of data which shares interface 
+// Functor (Array is a functor) - is a structure of data which shares interface
 // to map on this data
 // identity - copy of Array not reference
 // composition -we can use compositiona and chaining
-const double = value => value * 2;
-const triple = x => x * 3;
-const add2 = x => x + 2;
+const double = (value) => value * 2;
+const triple = (x) => x * 3;
+const add2 = (x) => x + 2;
 
 const Functor = (x) => ({
   map: (fn) => Functor(fn(x)),
-  valueOf: () => x
+  valueOf: () => x,
+  inspect: () => `Functor(${x})`,
 });
 
 const number = Functor(5);
 const functorResult = number.map(double).map(add2).valueOf();
-console.log('Functor result: ', functorResult);
+console.log("Functor result: ", functorResult);
+
+//Monads - main method of Monad is flatMap
+
+const fahrenheitToCelsius = (a) => (a - 32) * 0.5556;
+
+const sensor1 = 15;
+const sensor2 = null;
+
+fahrenheitToCelsius(sensor1);
+fahrenheitToCelsius(sensor2); // wrong calculation!
+
+// To solve this problem use monads
+const Just = (x) => ({
+  map: (fn) => Just(fn(x)),
+  flatMap: (fn) => fn(x),
+  valueOf: () => x,
+  inspect: () => `Just(${x})`,
+  type: "just",
+});
+
+const Nothing = () => ({
+  map: (fn) => Nothing(fn()),
+  flatMap: (fn) => fn(),
+  valueOf: () => Nothing(),
+  inspect: () => `Nothing`,
+  type: "nothing",
+});
+
+const MaybeOf = (x) =>
+  x === null || x === undefined || x.type === "nothing" ? Nothing() : Just(x);
+
+const Maybe = {
+  of: MaybeOf,
+};
+
+const temp1C = Maybe.of(sensor1).map(fahrenheitToCelsius).inspect();
+const temp2C = Maybe.of(sensor2).map(fahrenheitToCelsius).inspect();
+
+console.log("Monads: ", temp1C, temp2C);

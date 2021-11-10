@@ -164,7 +164,7 @@ _.chain(names)
   .value();
 
 // 4.3 Currying - transform multi-argument function to sequence of unary functions.
-// Pros: 
+// Pros:
 // - emulating function interfaces,
 // - implementing reusable modular function templates.
 
@@ -178,5 +178,55 @@ const checkType = R.curry((typeDef, obj) => {
   return obj;
 });
 
-console.log(checkType(String)('Curry')); 
-console.log(checkType(String)(42)); 
+console.log(checkType(String)("Curry"));
+// console.log(checkType(String)(42));
+
+//function factories (alternative to factory of objects in objectiv programming)
+const useDb = false;
+const arr = ["444-44-4444", "44-44-4444", "111"];
+
+const fetchStudentFromDb = R.curry(function (db, ssn) {
+  return find(db, ssn);
+});
+
+const fetchStudentFromArray = R.curry(function (arr, ssn) {
+  return arr[ssn];
+});
+
+const findStudent = useDb ? fetchStudentFromDb(db) : fetchStudentFromArray(arr);
+findStudent("444-44-4444");
+
+// Compose examples
+const str = `We can only see a short distance
+ahead but we can see plenty there
+that needs to be done`;
+const explode = (str) => str.split(/\s+/);
+const count = (arr) => arr.length;
+const countWords = R.compose(count, explode);
+console.log("Composition:", countWords(str));
+
+const trim = (str) => str.replace(/^\s*|\s*$/g, '');
+const normalize = (str) => str.replace(/\-/g, '');
+const validLength = (param, str) => str.length === param;
+const checkLengthSsn = _.partial(validLength, 9);
+const cleanInput = R.compose(normalize, trim);
+const isValidSsn = R.compose(checkLengthSsn, cleanInput);
+console.log(cleanInput(' 444-44-4444 ')); //-> '444444444'
+console.log(isValidSsn(' 444-44-4444 ')); //-> true
+
+// Functor (Array is a functor) - is a structure of data which shares interface 
+// to map on this data
+// identity - copy of Array not reference
+// composition -we can use compositiona and chaining
+const double = value => value * 2;
+const triple = x => x * 3;
+const add2 = x => x + 2;
+
+const Functor = (x) => ({
+  map: (fn) => Functor(fn(x)),
+  valueOf: () => x
+});
+
+const number = Functor(5);
+const functorResult = number.map(double).map(add2).valueOf();
+console.log('Functor result: ', functorResult);
